@@ -1,9 +1,23 @@
 import sys
 import os
+import sys
+sys.path.append(r"D:\Graduation_Project\volleyball_analytics\src")
 
 # 添加项目根目录到Python路径
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+blender_python_path = r"D:\程序\4.4\python\lib\site_packages"
+sys.path.insert(0, blender_python_path)
+print("当前Python版本:", sys.version)
 
+def check_blender_files():
+    """ 检查关键文件是否存在 """
+    required_files = [
+        os.path.join(blender_python_path, "mathutils/__init__.py"),
+        os.path.join(blender_python_path, "mathutils_%s.so" % sys.version_info.major)
+    ]
+    for f in required_files:
+        print("路径存在:", os.path.exists(f), "->", f)
+check_blender_files()
 
 # 打印 sys.path 检查
 print(sys.path)
@@ -14,18 +28,29 @@ from PIL import Image, ImageTk
 import cv2
 import random
 
-from mathutils import Vector
-from mathutils.geometry import intersect_point_line
+try:
+    from mathutils import Vector
+    from mathutils.geometry import intersect_point_line
+except ImportError:
+    print("使用应急向量类")
+    class Vector:
+        def __init__(self, co):
+            self.x, self.y, *self.z = co  # 处理二维/三维坐标
+        def __getitem__(self, idx):
+            return (self.x, self.y, self.z[0])[idx]
+        @property
+        def length(self):
+            return ((self.x**2 + self.y**2) + (self.z[0]**2 if self.z else 0))**0.5
+        
 from numpy._typing import NDArray
 from typing_extensions import Tuple
-
-
-
-# 原来的导入语句
 from src.ml.yolo.court.segmentation import CourtSegmentor
-
-
-
+from ultralytics import settings
+settings.update({
+    'datasets_dir': 'D:/Graduation_Project/volleyball_analytics/datasets',
+    'weights_dir': 'D:/Graduation_Project/volleyball_analytics/weights',
+    'runs_dir': 'D:/Graduation_Project/volleyball_analytics/runs'
+})
 
 class CourtAnnotator(object):
     def __init__(self, filename: str, save_path: str):
